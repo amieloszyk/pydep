@@ -20,7 +20,7 @@ class Material(object):
             setattr(self,rx+'_name',[])
             setattr(self,rx+'_ind',[])
             setattr(self,rx+'_branch',[])
-            setattr(self,rx+'_XS',[])
+            setattr(self,rx+'_rate_norm',[])
 
     def add_iso(self,name,dens=0.0,den_unit='1/m3'):
         '''Add an isotope to track.'''
@@ -43,7 +43,7 @@ class Material(object):
             getattr(self,rx+'_name').append([''])
             getattr(self,rx+'_ind').append([-1])
             getattr(self,rx+'_branch').append([1.0])
-            getattr(self,rx+'_XS').append(0.0)
+            getattr(self,rx+'_rate_norm').append(0.0)
 
     def get_ind(self,name,attr):
         '''Get the index associated with the name.'''
@@ -138,7 +138,7 @@ class Material(object):
         self.daught_ind[parent_ind] = daught_ind
         self.dec_branch[parent_ind] = branch
 
-    def set_rx_XS(self,name,val,rx_type,units='1/m3-sec'):
+    def set_rx_rate_norm(self,name,val,rx_type,units='1/m3-sec'):
         '''Generically set reaction rate.'''
 
         ind = self.get_ind(name,'N_name')
@@ -152,22 +152,22 @@ class Material(object):
         if 'hr' in units:
             val /= 3600.0
         
-        getattr(self,rx_type+'_XS')[ind] = val
+        getattr(self,rx_type+'_rate_norm')[ind] = val
 
-    def set_ng_XS(self,name,val,units='1/m3-sec'):
+    def set_ng_rate_norm(self,name,val,units='1/m3-sec'):
         '''Set (n,gamma) rate.'''
 
-        self.set_rx_XS(name,val,'ng',units=units)
+        self.set_rx_rate_norm(name,val,'ng',units=units)
 
-    def set_n2n_XS(self,name,val,units='1/m3-sec'):
+    def set_n2n_rate_norm(self,name,val,units='1/m3-sec'):
         '''Set (n,2n) rate.'''
 
-        self.set_rx_XS(name,val,'n2n',units=units)
+        self.set_rx_rate_norm(name,val,'n2n',units=units)
 
-    def set_fiss_XS(self,name,val,units='1/m3-sec'):
+    def set_fiss_rate_norm(self,name,val,units='1/m3-sec'):
         '''Set fission rate.'''
 
-        self.set_rx_XS(name,val,'fiss',units=units)
+        self.set_rx_rate_norm(name,val,'fiss',units=units)
 
     def build_A_mat(self,dt=None):
         '''Build the depletion A matrix.'''
@@ -181,7 +181,7 @@ class Material(object):
             # Reactions first
             for rx in self.rx_type:
 
-                rate = getattr(self,rx+'_XS')[j]
+                rate = getattr(self,rx+'_rate_norm')[j]
 
                 self.A[j,j] -= rate
 

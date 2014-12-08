@@ -35,8 +35,8 @@ Pu240 = [0.]
 time = [0.0]
 while time[-1] < 100.*3600.*24.:
         time.append(time[-1]+dt)
-        test.set_ng_XS('U238',sig_c_U238)
-        test.set_ng_XS('Pu239',sig_c_Pu239)
-        test.set_fiss_XS('Pu239',sig_f_Pu239)
+        test.set_ng_rate_norm('U238',sig_c_U238)
+        test.set_ng_rate_norm('Pu239',sig_c_Pu239)
+        test.set_fiss_rate_norm('Pu239',sig_f_Pu239)
         test.deplete_step(dt)
 
