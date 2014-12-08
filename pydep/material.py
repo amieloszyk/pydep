@@ -20,7 +20,7 @@ class Material(object):
             setattr(self,rx+'_name',[])
             setattr(self,rx+'_ind',[])
             setattr(self,rx+'_branch',[])
-            setattr(self,rx+'_rate',[])
+            setattr(self,rx+'_XS',[])
 
     def add_iso(self,name,dens=0.0,den_unit='1/m3'):
         '''Add an isotope to track.'''
@@ -43,7 +43,7 @@ class Material(object):
             getattr(self,rx+'_name').append([''])
             getattr(self,rx+'_ind').append([-1])
             getattr(self,rx+'_branch').append([1.0])
-            getattr(self,rx+'_rate').append(0.0)
+            getattr(self,rx+'_XS').append(0.0)
 
     def get_ind(self,name,attr):
         '''Get the index associated with the name.'''
@@ -138,7 +138,7 @@ class Material(object):
         self.daught_ind[parent_ind] = daught_ind
         self.dec_branch[parent_ind] = branch
 
-    def set_rx_rate(self,name,val,rx_type,units='1/m3-sec'):
+    def set_rx_XS(self,name,val,rx_type,units='1/m3-sec'):
         '''Generically set reaction rate.'''
 
         ind = self.get_ind(name,'N_name')
@@ -152,22 +152,22 @@ class Material(object):
         if 'hr' in units:
             val /= 3600.0
         
-        getattr(self,rx_type+'_rate')[ind] = val
+        getattr(self,rx_type+'_XS')[ind] = val
 
-    def set_ng_rate(self,name,val,units='1/m3-sec'):
+    def set_ng_XS(self,name,val,units='1/m3-sec'):
         '''Set (n,gamma) rate.'''
 
-        self.set_rx_rate(name,val,'ng',units=units)
+        self.set_rx_XS(name,val,'ng',units=units)
 
-    def set_n2n_rate(self,name,val,units='1/m3-sec'):
+    def set_n2n_XS(self,name,val,units='1/m3-sec'):
         '''Set (n,2n) rate.'''
 
-        self.set_rx_rate(name,val,'n2n',units=units)
+        self.set_rx_XS(name,val,'n2n',units=units)
 
-    def set_fiss_rate(self,name,val,units='1/m3-sec'):
+    def set_fiss_XS(self,name,val,units='1/m3-sec'):
         '''Set fission rate.'''
 
-        self.set_rx_rate(name,val,'fiss',units=units)
+        self.set_rx_XS(name,val,'fiss',units=units)
 
     def build_A_mat(self,dt=None):
         '''Build the depletion A matrix.'''
@@ -181,11 +181,11 @@ class Material(object):
             # Reactions first
             for rx in self.rx_type:
 
-                rate = getattr(self,rx+'_rate')[j]
+                rate = getattr(self,rx+'_XS')[j]
 
                 self.A[j,j] -= rate
 
-                for ind,rat in zip(getattr(self,rx+'_branch')[j],
+                for ind,rat in zip(getattr(self,rx+'_ind')[j],
                     getattr(self,rx+'_branch')[j]):
 
                     if ind != -1:
@@ -227,9 +227,5 @@ class Material(object):
         
         vect_new = np.transpose(self.Taylor_exp_mat(dt)*vect).tolist()
 
-        print self.A
-        print self.Taylor_exp_mat(dt)
-
         self.N_vect = vect_new[0]
 
-        print self.N_vect
