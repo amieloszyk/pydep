@@ -9,12 +9,14 @@ class Material(object):
         self.N_vect = []
         self.ng_name = []
         self.ng_ind = []
+        self.ng_branch = []
         self.n2n_name = []
         self.n2n_ind = []
+        self.n2n_branch = []
         self.dec_const = []
         self.daught_name = []
         self.daught_ind = []
-        self.branch_rat = []
+        self.dec_branch = []
 
     def add_iso(self,name,dens=0.0,den_unit='1/m3'):
         '''Add an isotope to track.'''
@@ -27,14 +29,16 @@ class Material(object):
             if 'cm' in den_unit:
                 dens *= 100.0
         self.N_vect.append(dens)
-        self.ng_name.append('')
-        self.ng_ind.append(-1)
-        self.n2n_name.append('')
-        self.n2n_ind.append(-1)
+        self.ng_name.append([''])
+        self.ng_ind.append([-1])
+        self.ng_branch.append([1.0])
+        self.n2n_name.append([''])
+        self.n2n_ind.append([-1])
+        self.n2n_branch.append([1.0])
         self.dec_const.append(0.0)
-        self.daught_name.append('')
-        self.daught_ind.append(-1)
-        self.branch_rat.append([1.0])
+        self.daught_name.append([''])
+        self.daught_ind.append([-1])
+        self.dec_branch.append([1.0])
 
     def get_ind(self,name,attr):
         '''Get the index associated with the name.'''
@@ -67,8 +71,8 @@ class Material(object):
         '''Set the (n,rx) daughter'''
 
         ind_from = self.get_ind(name,'N_name')
-        ind_to = self.get_ind(rx_name,'N_name')
-        getattr(self,rx_type+'_name')[ind_from] = rx_name
+        ind_to = [self.get_ind(rx_name,'N_name')]
+        getattr(self,rx_type+'_name')[ind_from] = [rx_name]
         getattr(self,rx_type+'_ind')[ind_from] = ind_to
 
     def set_ng_path(self,name,ng_name):
@@ -127,4 +131,4 @@ class Material(object):
         self.dec_const[parent_ind] = dec_const
         self.daught_name[parent_ind] = daught_name
         self.daught_ind[parent_ind] = daught_ind
-        self.branch_rat[parent_ind] = branch
+        self.dec_branch[parent_ind] = branch
