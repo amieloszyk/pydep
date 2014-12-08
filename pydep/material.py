@@ -2,21 +2,25 @@ import numpy as np
 
 class Material(object):
 
-    def __init__(self,mat_id=None,name=''):
+    def __init__(self,rx_type=['fiss','ng','n2n'],name=''):
         '''Initialize the class.'''
 
         self.N_name = []
         self.N_vect = []
-        self.ng_name = []
-        self.ng_ind = []
-        self.ng_branch = []
-        self.n2n_name = []
-        self.n2n_ind = []
-        self.n2n_branch = []
         self.dec_const = []
         self.daught_name = []
         self.daught_ind = []
         self.dec_branch = []
+        self.Q_fiss = []
+
+        self.rx_type = rx_type
+
+        for rx in rx_type:
+
+            setattr(self,rx+'_name',[])
+            setattr(self,rx+'_ind',[])
+            setattr(self,rx+'_branch',[])
+            setattr(self,rx+'_rate',[])
 
     def add_iso(self,name,dens=0.0,den_unit='1/m3'):
         '''Add an isotope to track.'''
@@ -29,16 +33,17 @@ class Material(object):
             if 'cm' in den_unit:
                 dens *= 100.0
         self.N_vect.append(dens)
-        self.ng_name.append([''])
-        self.ng_ind.append([-1])
-        self.ng_branch.append([1.0])
-        self.n2n_name.append([''])
-        self.n2n_ind.append([-1])
-        self.n2n_branch.append([1.0])
         self.dec_const.append(0.0)
         self.daught_name.append([''])
         self.daught_ind.append([-1])
         self.dec_branch.append([1.0])
+        self.Q_fiss.append(0.0)
+
+        for rx in self.rx_type:
+            getattr(self,rx+'_name').append([''])
+            getattr(self,rx+'_ind').append([-1])
+            getattr(self,rx+'_branch').append([1.0])
+            getattr(self,rx+'_rate').append([0.0])
 
     def get_ind(self,name,attr):
         '''Get the index associated with the name.'''
@@ -132,3 +137,93 @@ class Material(object):
         self.daught_name[parent_ind] = daught_name
         self.daught_ind[parent_ind] = daught_ind
         self.dec_branch[parent_ind] = branch
+
+        def set_rx_rate(self,name,val,rx_type,units='1/m3-sec'):
+            '''Generically set reaction rate.'''
+
+            ind = self.get_ind(name,'N_name')
+
+            if '/cm3' in den_unit:
+                val *= 100.**3
+            elif 'brn' in den_unit:
+                val *= 1.0e24
+                if 'cm' in den_unit:
+                    val *= 100.0
+            if 'hr' in units:
+                val /= 3600.0
+            
+            getattr(self,rx_type+'_rate')[ind] = val
+
+        def set_ng_rate(self,name,val,units='1/m3-sec'):
+            '''Set (n,gamma) rate.'''
+
+            self.set_rx_rate(name,val,'ng',units=units)
+
+        def set_n2n_rate(self,name,val,units='1/m3-sec'):
+            '''Set (n,2n) rate.'''
+
+            self.set_rx_rate(name,val,'n2n',units=units)
+
+        def set_ng_rate(self,name,val,units='1/m3-sec'):
+            '''Set fission rate.'''
+
+            self.set_rx_rate(name,val,'fiss',units=units)
+
+        def build_A_mat(self,dt=None):
+            '''Build the depletion A matrix.'''
+
+            self.A = np.matrix([[0.0]*len(self.N_vect)]*len(self.N_vect)])
+
+            for j in len(self.N_vect):
+
+            #if dt: Bypass the decay
+
+                # Reactions first
+                for rx in self.rx_type:
+
+                    rate = getattr(self,rx+'_rate')
+
+                    self.A[j,j] -= rate
+
+                    for ind,rat in zip(getattr(self,rx+'_branch'),
+                        getattr(self,rx+'_branch'):
+
+                        if ind != -1:
+
+                            self.A[j,ind] += rate*rat
+
+                # Now decay
+                rate = self.dec_const[j]
+
+                self.A[j,j] -= rate
+
+                for ind,rat in zip(self.daught_ind,self.dec_branch):
+
+                    self.A[j,ind] += rate*rat
+
+        def Taylor_exp_mat(self,dt,M=100):
+            '''Taylor expansion of exponential matrix.'''
+
+            fact = 1.0
+            E_mat = np.matrix([[0.0]*len(self.N_vect)]*len(N_vect))
+            At = (self.A*dt)**0
+
+            for n in xrange(M+1):
+
+                if m != 0:
+                    fact *= float(m)
+                    At *= (self.A*dt)
+
+                E_mat += 1.0/fact*At
+
+            return E_mat
+
+        def deplete_step(self,dt):
+            '''Deplete one time step.'''
+
+            vect = np.matrix(self.N_vect)
+            
+            vect_new = (Taylor_exp_mat(dt)*vect).tolist()
+
+            self.N_vect = vect_new
+
