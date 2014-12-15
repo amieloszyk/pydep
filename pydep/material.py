@@ -72,6 +72,13 @@ class Material(object):
                 dens *= 100.0
         self.N_vect[ind] = dens
 
+    def set_Q_fiss(self,name,val):
+        '''Set the fission Q value (in MeV)'''
+
+        ind = self.get_ind(name,'N_name')
+
+        self.Q_fiss[ind] = val
+
     def set_nrx(self,name,rx_name,rx_type):
         '''Set the (n,rx) daughter'''
 
