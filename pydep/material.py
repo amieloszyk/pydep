@@ -228,7 +228,7 @@ class Material(object):
 
                     if ind != -1:
 
-                        self.A[j,ind] += rate*rat
+                        self.A[ind,j] += rate*rat
 
             # Now decay
             rate = self.dec_const[j]
@@ -237,7 +237,7 @@ class Material(object):
 
             for ind,rat in zip(self.daught_ind[j],self.dec_branch[j]):
 
-                self.A[j,ind] += rate*rat
+                self.A[ind,j] += rate*rat
 
     def Taylor_exp_mat(self,dt,M=100):
         '''Taylor expansion of exponential matrix.'''
