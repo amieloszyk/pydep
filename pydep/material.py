@@ -239,7 +239,7 @@ class Material(object):
 
                 self.A[ind,j] += rate*rat
 
-    def Taylor_exp_mat(self,dt,M=100):
+    def Taylor_exp_mat(self,dt,M=15):
         '''Taylor expansion of exponential matrix.'''
 
         fact = 1.0
