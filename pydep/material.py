@@ -20,6 +20,7 @@ class Material(object):
             setattr(self,rx+'_name',[])
             setattr(self,rx+'_ind',[])
             setattr(self,rx+'_branch',[])
+            setattr(self,rx+'_XS',[])
             setattr(self,rx+'_rate_norm',[])
 
     def add_iso(self,name,dens=0.0,den_unit='1/m3'):
@@ -29,7 +30,7 @@ class Material(object):
         if '/cm3' in den_unit:
             dens *= 100.**3
         elif 'brn' in den_unit:
-            dens *= 1.0e24
+            dens *= 1.0e28
             if 'cm' in den_unit:
                 dens *= 100.0
         self.N_vect.append(dens)
@@ -43,6 +44,7 @@ class Material(object):
             getattr(self,rx+'_name').append([''])
             getattr(self,rx+'_ind').append([-1])
             getattr(self,rx+'_branch').append([1.0])
+            getattr(self,rx+'_XS').append(0.0)
             getattr(self,rx+'_rate_norm').append(0.0)
 
     def get_ind(self,name,attr):
@@ -57,7 +59,7 @@ class Material(object):
         return ind
 
     def set_dens(self,name=None,ind=None,dens=0.0,den_unit='1/m3'):
-        '''Reset the number density of a value.'''
+        '''Reset the number density of a value. (stored in 1/m3)'''
 
         if not ind:
             ind = self.get_ind(name,'N_name')
@@ -78,6 +80,30 @@ class Material(object):
         ind = self.get_ind(name,'N_name')
 
         self.Q_fiss[ind] = val
+
+    def get_Q_fiss(self,name):
+        '''Get the fission Q value (in MeV)'''
+
+        ind = self.get_ind(name,'N_name')
+
+        return self.Q_fiss[ind]
+
+    def get_dens(self,name,unit='1/m3'):
+        '''Get the density'''
+
+        ind = self.get_ind(name,'N_name')
+
+        dens = self.N_vect[ind]
+
+        # Unit conversion
+        if '/cm3' in unit:
+            dens /= 100.**3
+        elif 'brn' in unit:
+            dens /= 1.0e24
+            if 'cm' in unit:
+                dens /= 100.0
+        
+        return dens
 
     def set_nrx(self,name,rx_name,rx_type):
         '''Set the (n,rx) daughter'''
@@ -145,34 +171,39 @@ class Material(object):
         self.daught_ind[parent_ind] = daught_ind
         self.dec_branch[parent_ind] = branch
 
-    def set_rx_rate_norm(self,name,val,rx_type,units='1/m3-sec'):
-        '''Generically set reaction rate.'''
+    def set_XS(self,name,val,rx_type):
+        '''Set cross sections (stored in barns)'''
 
         ind = self.get_ind(name,'N_name')
 
-        if '/cm3' in units:
-            val *= 100.**3
-        elif 'brn' in units:
-            val *= 1.0e24
-            if 'cm' in units:
-                val *= 100.0
-        if 'hr' in units:
-            val /= 3600.0
+        getattr(self,rx_type+'_XS')[ind] = val
+
+    def get_XS(self,name,rx_type):
+        '''Get cross sections (stored in barns)'''
+
+        ind = self.get_ind(name,'N_name')
+
+        return getattr(self,rx_type+'_XS')[ind]
+
+    def set_rx_rate_norm(self,name,val,rx_type,units='1/sec'):
+        '''Generically set the density normalized reaction rate.'''
+
+        ind = self.get_ind(name,'N_name')
         
         getattr(self,rx_type+'_rate_norm')[ind] = val
 
-    def set_ng_rate_norm(self,name,val,units='1/m3-sec'):
-        '''Set (n,gamma) rate.'''
+    def set_ng_rate_norm(self,name,val,units='1/sec'):
+        '''Set the density normalized (n,gamma) rate.'''
 
         self.set_rx_rate_norm(name,val,'ng',units=units)
 
-    def set_n2n_rate_norm(self,name,val,units='1/m3-sec'):
-        '''Set (n,2n) rate.'''
+    def set_n2n_rate_norm(self,name,val,units='1/sec'):
+        '''Set the density normalized (n,2n) rate.'''
 
         self.set_rx_rate_norm(name,val,'n2n',units=units)
 
-    def set_fiss_rate_norm(self,name,val,units='1/m3-sec'):
-        '''Set fission rate.'''
+    def set_fiss_rate_norm(self,name,val,units='1/sec'):
+        '''Set the density normalized fission rate.'''
 
         self.set_rx_rate_norm(name,val,'fiss',units=units)
 
